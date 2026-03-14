@@ -90,6 +90,14 @@ Terminal=false
 - No se envía audio, transcripciones ni resúmenes a ningún servidor externo.
 - Las grabaciones se guardan en `output/recordings/` (excluido del repositorio por `.gitignore`).
 
+## Consejos y solución de problemas
+
+### 🎙 Problemas con la grabación del micrófono
+Si tu micrófono no se captura correctamente, una alternativa es **unirte a la reunión con un segundo usuario** desde el mismo equipo. Ese usuario habla en tu nombre, por lo que tu voz llega como audio de la llamada y queda mezclada directamente en el audio del sistema — sin necesidad de capturar el micrófono por separado.
+
+### 🤖 Problemas con el modelo local
+Si Ollama no está disponible o el modelo local no da buenos resultados, puedes **copiar la transcripción generada** y pegarla manualmente en el chat de cualquier modelo de confianza: Claude, ChatGPT, Gemini, etc. La transcripción se muestra completa en la pantalla de la app antes de intentar el resumen.
+
 ## Stack tecnológico
 
 | Componente | Tecnología |
@@ -198,6 +206,14 @@ Terminal=false
 - All processing happens **on your machine**.
 - No audio, transcripts, or summaries are sent to any external server.
 - Recordings are saved to `output/recordings/` (excluded from the repository via `.gitignore`).
+
+## Tips & Troubleshooting
+
+### 🎙 Microphone recording issues
+If your microphone is not captured correctly, a workaround is to **join the meeting with a second user account** from the same machine. That user speaks on your behalf, so your voice enters the call as meeting audio and gets mixed directly into the system audio — no separate microphone capture needed.
+
+### 🤖 Local model issues
+If Ollama is unavailable or the local model doesn't produce good results, you can **copy the generated transcript** and paste it manually into any trusted AI chat: Claude, ChatGPT, Gemini, etc. The full transcript is shown in the app before the summary step.
 
 ## Tech Stack
 
