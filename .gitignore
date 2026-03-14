@@ -1,0 +1,23 @@
+# Virtual environment
+venv/
+
+# Output (recordings, transcripts — personal content)
+output/
+
+# Test audio files
+*.wav
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
