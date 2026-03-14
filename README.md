@@ -40,7 +40,7 @@ Navega y reprocesa grabaciones anteriores desde la pestaña de historial.
 
 ```bash
 # Clona el repositorio
-git clone https://github.com/YOUR_USERNAME/grabadora-de-reuniones.git
+git clone https://github.com/ferkinzz/grabadora-de-reuniones.git
 cd grabadora-de-reuniones
 
 # Crea el entorno virtual e instala dependencias
@@ -149,7 +149,7 @@ Browse and reprocess past recordings from the history tab.
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/grabadora-de-reuniones.git
+git clone https://github.com/ferkinzz/grabadora-de-reuniones.git
 cd grabadora-de-reuniones
 
 # Create virtual environment and install dependencies
