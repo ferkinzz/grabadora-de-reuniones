@@ -2,7 +2,7 @@ customtkinter
 soundcard
 soundfile
 faster-whisper
-ollama
+openai
 numpy
 scipy
 pillow

@@ -1,7 +1,10 @@
 from faster_whisper import WhisperModel
+from huggingface_hub import snapshot_download
 import os
 
 class Transcriber:
+    DEFAULT_MODEL_SIZE = "base"
+
     def __init__(self, model_size="base"):
         # Run on CPU by default to be safe, or "cuda" if available
         # faster-whisper handles this auto logic well usually, but explicit is better
@@ -10,6 +13,21 @@ class Transcriber:
         
         print(f"Loading Whisper model: {model_size} on {device}...")
         self.model = WhisperModel(model_size, device=device, compute_type="int8")
+
+    @classmethod
+    def check_model_ready(cls, model_size=None):
+        """Check the local cache without downloading or loading the model."""
+        model_size = model_size or cls.DEFAULT_MODEL_SIZE
+        repo_id = f"Systran/faster-whisper-{model_size}"
+        try:
+            model_path = snapshot_download(repo_id, local_files_only=True)
+            required_files = ("model.bin", "config.json", "tokenizer.json")
+            missing = [name for name in required_files if not os.path.exists(os.path.join(model_path, name))]
+            if missing:
+                return False, f"Incomplete download: {', '.join(missing)}"
+            return True, f"Whisper {model_size} is downloaded and ready"
+        except Exception:
+            return False, f"Whisper {model_size} is not downloaded"
 
     def transcribe(self, file_path):
         """Transcribes audio, returns (text, language_code), and caches result."""

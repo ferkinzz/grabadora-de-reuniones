@@ -6,6 +6,32 @@ output/
 
 # Test audio files
 *.wav
+*.mp3
+*.m4a
+*.flac
+*.ogg
+*.opus
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+config/device_aliases.json
+config/device_aliases.json.tmp
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+
+# Local data and logs
+*.log
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.backup
 
 # Python
 __pycache__/
@@ -17,6 +43,8 @@ __pycache__/
 # IDE
 .vscode/
 .idea/
+.zed/
+.fleet/
 
 # OS
 .DS_Store

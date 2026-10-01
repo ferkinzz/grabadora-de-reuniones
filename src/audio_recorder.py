@@ -10,10 +10,79 @@ class AudioRecorder:
         self.mic_thread = None
         self.sys_thread = None
         
-    def get_devices(self):
-        """Returns a list of available microphones (including loopback)."""
-        # On Linux, loopback/monitors are often listed in all_microphones(include_loopback=True)
-        return sc.all_microphones(include_loopback=True)
+    def get_input_devices(self):
+        """Return physical microphone inputs, excluding system loopbacks."""
+        return [
+            device for device in sc.all_microphones(include_loopback=True)
+            if not getattr(device, "isloopback", False)
+        ]
+
+    def get_system_devices(self):
+        """Return output devices paired with the loopback used to record them."""
+        microphones = sc.all_microphones(include_loopback=True)
+        loopbacks = {
+            str(device.id).removesuffix(".monitor"): device.id
+            for device in microphones
+            if getattr(device, "isloopback", False)
+        }
+        return [
+            (speaker, loopbacks.get(str(speaker.id)))
+            for speaker in sc.all_speakers()
+            if loopbacks.get(str(speaker.id)) is not None
+        ]
+
+    def play_test_tone(self, speaker_id, duration=1.2, on_complete=None):
+        """Play a gentle two-note tone through a selected output device."""
+        def run_test():
+            error = None
+            try:
+                samplerate = 44100
+                frame_count = int(samplerate * duration)
+                timeline = np.arange(frame_count) / samplerate
+                midpoint = frame_count // 2
+                tone = np.empty(frame_count)
+                tone[:midpoint] = np.sin(2 * np.pi * 440 * timeline[:midpoint])
+                tone[midpoint:] = np.sin(2 * np.pi * 660 * timeline[midpoint:])
+                envelope = np.sin(np.pi * np.arange(frame_count) / frame_count) ** 2
+                stereo_tone = np.column_stack((tone, tone)) * envelope[:, None] * 0.16
+                speaker = sc.get_speaker(speaker_id)
+                speaker.play(stereo_tone, samplerate=samplerate)
+            except Exception as exc:
+                error = str(exc)
+            finally:
+                if on_complete:
+                    on_complete(error)
+
+        thread = threading.Thread(target=run_test, daemon=True)
+        thread.start()
+        return thread
+
+    def test_device(self, device_id, duration=5, on_level=None, on_complete=None):
+        """Measure an input for a few seconds without saving audio to disk."""
+        def run_test():
+            detected = False
+            error = None
+            try:
+                mic = sc.get_microphone(device_id, include_loopback=True)
+                samplerate = 44100
+                started_at = time.time()
+                with mic.recorder(samplerate=samplerate) as recorder:
+                    while time.time() - started_at < duration:
+                        data = recorder.record(numframes=2048)
+                        rms = float(np.sqrt(np.mean(np.square(data)))) if data.size else 0.0
+                        level = min(1.0, rms * 12)
+                        detected = detected or rms > 0.001
+                        if on_level:
+                            on_level(level)
+            except Exception as exc:
+                error = str(exc)
+            finally:
+                if on_complete:
+                    on_complete(detected, error)
+
+        thread = threading.Thread(target=run_test, daemon=True)
+        thread.start()
+        return thread
 
     def _record_stream(self, device_id, output_path, stop_event):
         """Records from a specific device to a file."""

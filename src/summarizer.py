@@ -1,19 +1,40 @@
-import ollama
+from openai import OpenAI
+import os
+
+LMSTUDIO_BASE_URL = os.getenv("LMSTUDIO_BASE_URL", "http://localhost:1234/v1")
 
 class Summarizer:
-    def __init__(self, model_name="mistral:7b-instruct"):
+    DEFAULT_MODEL_NAME = "google/gemma-4-e4b"
+
+    def __init__(self, model_name="google/gemma-4-e4b"):
         self.model_name = model_name
+        self.client = OpenAI(base_url=LMSTUDIO_BASE_URL, api_key="not-needed")
+
+    @classmethod
+    def check_model_ready(cls, model_name=None):
+        """Check that LM Studio is reachable and exposes the configured model."""
+        model_name = model_name or cls.DEFAULT_MODEL_NAME
+        client = OpenAI(base_url=LMSTUDIO_BASE_URL, api_key="not-needed", timeout=3.0)
+        try:
+            available_models = [model.id for model in client.models.list().data]
+        except Exception:
+            return False, "LM Studio is not running or its server is unavailable"
+
+        if model_name in available_models:
+            return True, f"{model_name} is loaded and ready"
+        if available_models:
+            return False, f"Required: {model_name}. Loaded: {', '.join(available_models)}"
+        return False, f"LM Studio is running, but {model_name} is not loaded"
 
     def summarize(self, text, language_code="en"):
-        """Generates a summary, instructing LLM to use the detected language."""
         if not text:
             return "No text to summarize."
-            
+
         prompt = f"""
         You are a meeting assistant.
         Below is a meeting transcript with timestamps (e.g., [00:12]).
         
-        b]IMPORTANT INSTRUCTION[/b]: 
+        IMPORTANT INSTRUCTION:
         The language of the transcript is '{language_code}'.
         You MUST provide the summary IN THE SAME LANGUAGE ({language_code}).
         
@@ -23,21 +44,20 @@ class Summarizer:
         Transcript:
         {text}
         """
-        
+
         try:
-            response = ollama.chat(model=self.model_name, messages=[
-                {'role': 'user', 'content': prompt},
-            ])
-            return response['message']['content']
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{'role': 'user', 'content': prompt}],
+            )
+            return response.choices[0].message.content
         except Exception as e:
             return f"Error generating summary: {e}"
 
     def chat(self, transcript, user_query):
-        """Answers a user question based on the provided transcript."""
         if not transcript:
             return "No transcript context available."
 
-        # Create a system prompt with the transcript context
         messages = [
             {
                 'role': 'system',
@@ -48,9 +68,12 @@ class Summarizer:
                 'content': user_query
             }
         ]
-        
+
         try:
-            response = ollama.chat(model=self.model_name, messages=messages)
-            return response['message']['content']
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+            )
+            return response.choices[0].message.content
         except Exception as e:
             return f"Error in chat: {e}"
